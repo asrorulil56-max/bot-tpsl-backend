@@ -1,5 +1,6 @@
 {
   "name": "bot-tpsl-backend",
+  "type": "module", 
   "version": "1.0.0",
   "scripts": {
     "start": "node api/cron.js"
