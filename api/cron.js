@@ -19,8 +19,8 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 export default async function handler(req, res) {
     try {
-        // Looping 6 kali x 10 detik = 60 detik (1 Menit)
-        for (let cycle = 0; cycle < 6; cycle++) {
+        // Looping 12 kali x 5 detik = 60 detik (1 Menit)
+        for (let cycle = 0; cycle < 12; cycle++) {
             console.log(`Cek harga siklus ke-${cycle + 1}...`);
             
             const usersSnap = await getDocs(collection(db, 'users'));
@@ -74,6 +74,38 @@ export default async function handler(req, res) {
                                             await conn.sendRawTransaction(transaction.serialize());
                                             console.log("Real Jupiter swap success!");
                                         } catch(err) {
+                                            console.log("Jupiter Swap error:", err.message);
+                                        }
+                                    }
+
+                                    // 2. TUTUP POSISI DI DATABASE
+                                    await setDoc(doc(db, 'users', userId, 'history', item.id), { ...item, position: null }, { merge: true });
+                                    
+                                    // 3. KIRIM NOTIFIKASI KE APLIKASI WEB
+                                    const notifId = 'n-' + Date.now();
+                                    await setDoc(doc(db, 'users', userId, 'notifications', notifId), {
+                                        id: notifId,
+                                        message: `🤖 Auto TP/SL Dieksekusi: $${item.symbol}`,
+                                        subtext: `Target tercapai di PnL: ${pnlPct.toFixed(1)}%`,
+                                        type: pnlPct > 0 ? 'success' : 'error',
+                                        timestamp: Date.now(),
+                                        read: false
+                                    });
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                }
+            }
+            // Tunggu 5 detik sebelum cek harga lagi
+            if (cycle < 11) await sleep(5000); 
+        }
+
+        res.status(200).json({ status: "Selesai", message: "12 Siklus pengecekan (tiap 5s) rampung." });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
                                             console.log("Jupiter Swap error:", err.message);
                                         }
                                     }
