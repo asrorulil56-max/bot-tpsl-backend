@@ -17,7 +17,7 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 module.exports = async function (req, res) {
     try {
         // Looping 12 kali x 5 detik = 60 detik (1 Menit)
-        for (let cycle = 0; cycle < 12; cycle++) {
+        for (let cycle = 0; cycle < 10; cycle++) {
             console.log(`Cek harga siklus ke-${cycle + 1}...`);
             
             const usersSnap = await getDocs(collection(db, 'users'));
@@ -95,10 +95,10 @@ module.exports = async function (req, res) {
                 }
             }
             // Tunggu 5 detik sebelum cek harga lagi
-            if (cycle < 11) await sleep(5000); 
+            if (cycle < 9) await sleep(5000); 
         }
 
-        res.status(200).json({ status: "Selesai", message: "12 Siklus pengecekan (tiap 5s) rampung." });
+        res.status(200).json({ status: "Selesai", message: res.status(200).json({ status: "Selesai", message: "10 Siklus pengecekan (tiap 5s) rampung." }); });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
