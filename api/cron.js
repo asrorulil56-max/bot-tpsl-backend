@@ -1,12 +1,9 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, doc, setDoc } from 'firebase/firestore';
-import { Connection, Keypair, VersionedTransaction } from '@solana/web3.js';
-import bs58 from 'bs58';
+const { initializeApp } = require('firebase/app');
+const { getFirestore, collection, getDocs, doc, setDoc } = require('firebase/firestore');
+const { Connection, Keypair, VersionedTransaction } = require('@solana/web3.js');
+const bs58 = require('bs58');
 
-// Vercel serverless function max duration (Hobby plan)
-export const maxDuration = 60; 
-
-// WAJIB: Ganti dengan config Firebase kamu yang ada di App.jsx!
+// Config Firebase kamu
 const firebaseConfig = {
     apiKey: "AIzaSyBR8qJlgHz3M44QJw6557W5YBUS0MTE-XU",
     projectId: "terminal-sniper-db",
@@ -17,7 +14,7 @@ const db = getFirestore(app);
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-export default async function handler(req, res) {
+module.exports = async function (req, res) {
     try {
         // Looping 12 kali x 5 detik = 60 detik (1 Menit)
         for (let cycle = 0; cycle < 12; cycle++) {
@@ -69,7 +66,7 @@ export default async function handler(req, res) {
                                             });
                                             const swapData = await swapRes.json();
                                             const swapTransactionBuf = Buffer.from(swapData.swapTransaction, 'base64');
-                                            var transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+                                            const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
                                             transaction.sign([wallet]);
                                             await conn.sendRawTransaction(transaction.serialize());
                                             console.log("Real Jupiter swap success!");
@@ -105,36 +102,4 @@ export default async function handler(req, res) {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
-}
-                                            console.log("Jupiter Swap error:", err.message);
-                                        }
-                                    }
-
-                                    // 2. TUTUP POSISI DI DATABASE
-                                    await setDoc(doc(db, 'users', userId, 'history', item.id), { ...item, position: null }, { merge: true });
-                                    
-                                    // 3. KIRIM NOTIFIKASI KE APLIKASI WEB
-                                    const notifId = 'n-' + Date.now();
-                                    await setDoc(doc(db, 'users', userId, 'notifications', notifId), {
-                                        id: notifId,
-                                        message: `🤖 Auto TP/SL Dieksekusi: $${item.symbol}`,
-                                        subtext: `Target tercapai di PnL: ${pnlPct.toFixed(1)}%`,
-                                        type: pnlPct > 0 ? 'success' : 'error',
-                                        timestamp: Date.now(),
-                                        read: false
-                                    });
-                                }
-                            } catch(e) {}
-                        }
-                    }
-                }
-            }
-            // Tunggu 10 detik sebelum cek harga lagi
-            if (cycle < 5) await sleep(10000); 
-        }
-
-        res.status(200).json({ status: "Selesai", message: "6 Siklus pengecekan (tiap 10s) rampung." });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-}
+};
